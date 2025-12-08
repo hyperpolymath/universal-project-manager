@@ -1,0 +1,396 @@
+= Universal Project Manager Roadmap
+:toc: macro
+:toc-title: Table of Contents
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+
+[abstract]
+This document outlines the development roadmap for the Universal Project Manager,
+from the current CI/CD infrastructure through MVP v1.0 deployment and beyond.
+
+toc::[]
+
+== Vision
+
+The Universal Project Manager (UPM) aims to be a comprehensive,
+language-agnostic project management and CI/CD solution that:
+
+* Automatically detects project types and configurations
+* Provides unified CI/CD scripts across platforms (GitHub, GitLab, Bitbucket)
+* Enables seamless repository mirroring
+* Reduces setup time for new projects to minutes
+
+== Current State
+
+=== Completed Infrastructure
+
+[cols="1,3,1"]
+|===
+|Component |Description |Status
+
+|`ci-scripts/detect.sh`
+|Auto-detects languages, package managers, test frameworks, and build systems
+|✅ Complete
+
+|`ci-scripts/setup.sh`
+|Installs dependencies based on detected configuration
+|✅ Complete
+
+|`ci-scripts/test.sh`
+|Runs tests with coverage support
+|✅ Complete
+
+|`ci-scripts/lint.sh`
+|Runs linters with auto-fix support
+|✅ Complete
+
+|`ci-scripts/build.sh`
+|Builds projects in release or debug mode
+|✅ Complete
+
+|`ci-scripts/sync-mirror.sh`
+|Event-driven repository mirroring
+|✅ Complete
+
+|`ci-scripts/verify-mirror.sh`
+|Verifies sync between remotes
+|✅ Complete
+
+|`.github/workflows/ci.yml`
+|GitHub Actions CI/CD pipeline
+|✅ Complete
+
+|`.gitlab-ci.yml`
+|GitLab CI/CD pipeline
+|✅ Complete
+|===
+
+== Route to MVP v1.0
+
+=== Phase 1: Foundation (Current)
+
+*Status: In Progress*
+
+==== Goals
+* [x] Establish CI/CD infrastructure
+* [x] Create platform-agnostic scripts
+* [x] Set up dual-platform CI (GitHub + GitLab)
+* [ ] Complete documentation
+* [ ] Pass all CI checks
+
+==== Deliverables
+* Fully functional CI scripts
+* Working GitHub Actions workflow
+* Working GitLab CI configuration
+* Comprehensive documentation
+
+==== Success Criteria
+* All scripts pass shellcheck
+* CI runs successfully on both platforms
+* Mirror sync works reliably
+
+=== Phase 2: Testing & Validation
+
+*Target: Sprint 2*
+
+==== Goals
+* [ ] Achieve 80%+ test coverage for CI scripts
+* [ ] Validate all language detections
+* [ ] Test on real-world repositories
+* [ ] Gather user feedback
+
+==== Tasks
+
+[source,asciidoc]
+----
+1. Expand BATS test suite
+   - Test all detection functions
+   - Test error handling
+   - Test edge cases (empty repos, mixed languages)
+
+2. Integration testing
+   - Create test fixture repositories
+   - Test each language ecosystem
+   - Verify multi-language detection
+
+3. User acceptance testing
+   - Recruit 3-5 beta testers
+   - Document feedback
+   - Prioritize improvements
+----
+
+==== Success Criteria
+* All tests pass
+* No critical bugs reported
+* Positive user feedback
+
+=== Phase 3: Feature Completion
+
+*Target: Sprint 3*
+
+==== Goals
+* [ ] Add configuration file support (upm.yml)
+* [ ] Implement wiki mirroring
+* [ ] Add deployment scripts
+* [ ] Create CLI wrapper
+
+==== New Features
+
+.Configuration File Support
+[source,yaml]
+----
+# upm.yml - Example configuration
+version: 1
+
+project:
+  name: my-project
+  type: nodejs  # Override auto-detection
+
+ci:
+  test:
+    coverage: true
+    parallel: true
+  lint:
+    fix: false
+
+mirror:
+  enabled: true
+  target: gitlab
+  branches:
+    - main
+    - develop
+----
+
+.CLI Wrapper
+[source,bash]
+----
+# Proposed CLI interface
+upm detect          # Run detection
+upm setup           # Install dependencies
+upm test            # Run tests
+upm lint [--fix]    # Run linters
+upm build           # Build project
+upm mirror          # Sync to mirror
+upm init            # Initialize UPM in a project
+----
+
+=== Phase 4: MVP v1.0 Release
+
+*Target: Sprint 4*
+
+==== Release Checklist
+
+* [ ] All Phase 1-3 features complete
+* [ ] Documentation complete and reviewed
+* [ ] Security audit passed
+* [ ] Performance benchmarks meet targets
+* [ ] Release notes prepared
+* [ ] Changelog generated
+* [ ] Version tagged
+
+==== MVP Features
+
+[cols="1,2,1"]
+|===
+|Feature |Description |Priority
+
+|Auto-Detection
+|Detect 10+ languages, 15+ package managers, 20+ test frameworks
+|P0
+
+|CI Scripts
+|Platform-agnostic scripts for setup, test, lint, build
+|P0
+
+|GitHub Actions
+|Full CI/CD workflow with matrix testing
+|P0
+
+|GitLab CI
+|Full CI/CD pipeline with comparable features
+|P0
+
+|Mirror Sync
+|Event-driven push mirroring between platforms
+|P1
+
+|Configuration
+|YAML configuration file support
+|P1
+
+|CLI Tool
+|Simple command-line interface
+|P2
+
+|Documentation
+|Complete user and developer documentation
+|P0
+|===
+
+== Post-MVP Roadmap
+
+=== v1.1 - Extended Platform Support
+
+* [ ] Bitbucket Pipelines support
+* [ ] Azure DevOps support
+* [ ] CircleCI support
+* [ ] Jenkins pipeline generation
+
+=== v1.2 - Advanced Features
+
+* [ ] Monorepo support
+* [ ] Workspace/Lerna/Turborepo detection
+* [ ] Custom script hooks
+* [ ] Plugin system
+
+=== v1.3 - Enterprise Features
+
+* [ ] Private registry support
+* [ ] Custom language definitions
+* [ ] Team configuration sharing
+* [ ] Audit logging
+
+=== v2.0 - Platform Evolution
+
+* [ ] Web dashboard
+* [ ] Project analytics
+* [ ] AI-powered suggestions
+* [ ] Self-hosted option
+
+== Deployment Strategy
+
+=== MVP Deployment Architecture
+
+[source,asciidoc]
+----
+┌─────────────────────────────────────────────────────────────┐
+│                     Developer Workflow                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────┐     ┌─────────────┐     ┌─────────────┐      │
+│   │  Code   │────▶│   GitHub    │────▶│   GitLab    │      │
+│   │  Push   │     │   (Primary) │     │   (Mirror)  │      │
+│   └─────────┘     └──────┬──────┘     └─────────────┘      │
+│                          │                                  │
+│                    ┌─────▼─────┐                            │
+│                    │  GitHub   │                            │
+│                    │  Actions  │                            │
+│                    └─────┬─────┘                            │
+│                          │                                  │
+│         ┌────────────────┼────────────────┐                │
+│         │                │                │                │
+│   ┌─────▼─────┐   ┌─────▼─────┐   ┌─────▼─────┐          │
+│   │   Lint    │   │   Test    │   │   Build   │          │
+│   └───────────┘   └───────────┘   └─────┬─────┘          │
+│                                         │                  │
+│                                   ┌─────▼─────┐           │
+│                                   │  Deploy   │           │
+│                                   └───────────┘           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+----
+
+=== Deployment Environments
+
+[cols="1,2,2"]
+|===
+|Environment |Trigger |Purpose
+
+|Development
+|Every push to feature branches
+|Validate changes, run tests
+
+|Staging
+|Push to `develop` branch
+|Integration testing, preview
+
+|Production
+|Push to `main` or version tag
+|Live deployment
+|===
+
+=== Release Process
+
+. **Version Bump**
++
+[source,bash]
+----
+# Update version in relevant files
+npm version patch  # or minor/major
+----
+
+. **Changelog Generation**
++
+[source,bash]
+----
+# Generate changelog from commits
+npx conventional-changelog -p angular -i CHANGELOG.md -s
+----
+
+. **Tag Release**
++
+[source,bash]
+----
+git tag -a v1.0.0 -m "MVP Release"
+git push origin v1.0.0
+----
+
+. **Automated Release**
++
+* GitHub Actions creates release
+* Artifacts uploaded
+* Release notes generated
+
+== Success Metrics
+
+=== MVP Success Criteria
+
+[cols="1,2,1"]
+|===
+|Metric |Target |Measurement
+
+|CI Script Reliability
+|99% success rate on supported languages
+|CI logs analysis
+
+|Detection Accuracy
+|95% correct language detection
+|Test suite results
+
+|Setup Time
+|< 2 minutes for any project
+|Benchmark tests
+
+|Documentation Coverage
+|100% of public APIs documented
+|Manual review
+
+|User Satisfaction
+|4+ stars average rating
+|User feedback
+|===
+
+=== Long-term Goals
+
+* 1000+ repositories using UPM
+* Support for 20+ programming languages
+* Active community with contributors
+* Integration with major IDEs
+
+== Contributing
+
+See link:CONTRIBUTING.md[CONTRIBUTING.md] for guidelines on:
+
+* Reporting bugs
+* Suggesting features
+* Submitting pull requests
+* Development setup
+
+== Changelog
+
+See link:CHANGELOG.md[CHANGELOG.md] for version history.
+
+== License
+
+This project is licensed under the MIT License - see link:LICENSE[LICENSE] for details.

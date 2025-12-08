@@ -1,0 +1,335 @@
+# GitLab CI/CD Configuration
+# Uses shared scripts from ci-scripts/ for consistency with GitHub Actions
+
+stages:
+  - detect
+  - lint
+  - test
+  - build
+  - deploy
+
+# Global settings
+default:
+  image: ubuntu:22.04
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq git curl
+    - chmod +x ci-scripts/*.sh
+
+# Cache configuration
+.cache_config: &cache_config
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}"
+    paths:
+      - node_modules/
+      - .npm/
+      - .venv/
+      - ~/.cache/pip/
+      - vendor/
+      - target/
+    policy: pull-push
+
+# Detect job - determines project configuration
+detect:
+  stage: detect
+  script:
+    - |
+      source ci-scripts/detect.sh
+      detect_languages
+      detect_package_managers
+      detect_test_frameworks
+      detect_build_systems
+
+      echo "DETECTED_LANGUAGES=$DETECTED_LANGUAGES" > detect.env
+      echo "PRIMARY_LANGUAGE=$PRIMARY_LANGUAGE" >> detect.env
+      echo "DETECTED_PACKAGE_MANAGERS=$DETECTED_PACKAGE_MANAGERS" >> detect.env
+      echo "DETECTED_TEST_FRAMEWORKS=$DETECTED_TEST_FRAMEWORKS" >> detect.env
+
+      cat detect.env
+  artifacts:
+    reports:
+      dotenv: detect.env
+    expire_in: 1 hour
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# Node.js lint
+lint:nodejs:
+  stage: lint
+  image: node:20-slim
+  <<: *cache_config
+  needs:
+    - detect
+  script:
+    - npm ci --prefer-offline || npm install
+    - ci-scripts/lint.sh
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /javascript|typescript/
+      when: on_success
+    - when: never
+
+# Python lint
+lint:python:
+  stage: lint
+  image: python:3.12-slim
+  <<: *cache_config
+  needs:
+    - detect
+  script:
+    - pip install ruff black mypy
+    - ci-scripts/lint.sh
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /python/
+      when: on_success
+    - when: never
+
+# Go lint
+lint:go:
+  stage: lint
+  image: golang:1.22
+  <<: *cache_config
+  needs:
+    - detect
+  script:
+    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - ci-scripts/lint.sh
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /go/
+      when: on_success
+    - when: never
+
+# Rust lint
+lint:rust:
+  stage: lint
+  image: rust:latest
+  <<: *cache_config
+  needs:
+    - detect
+  script:
+    - rustup component add clippy rustfmt
+    - ci-scripts/lint.sh
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /rust/
+      when: on_success
+    - when: never
+
+# Shell lint
+lint:shell:
+  stage: lint
+  image: koalaman/shellcheck-alpine:stable
+  script:
+    - shellcheck ci-scripts/*.sh
+  rules:
+    - changes:
+        - ci-scripts/*.sh
+      when: on_success
+    - when: never
+
+# Generic lint (fallback)
+lint:generic:
+  stage: lint
+  <<: *cache_config
+  needs:
+    - detect
+  script:
+    - ci-scripts/setup.sh || true
+    - ci-scripts/lint.sh || echo "No linters configured"
+  rules:
+    - if: $DETECTED_LANGUAGES == ""
+      when: on_success
+
+# Node.js tests
+test:nodejs:
+  stage: test
+  image: node:20
+  <<: *cache_config
+  needs:
+    - detect
+    - lint:nodejs
+  script:
+    - npm ci --prefer-offline || npm install
+    - ci-scripts/test.sh --coverage --ci
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      junit: junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 1 week
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /javascript|typescript/
+      when: on_success
+    - when: never
+
+# Python tests
+test:python:
+  stage: test
+  image: python:3.12
+  <<: *cache_config
+  needs:
+    - detect
+    - lint:python
+  script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install pytest pytest-cov
+    - ci-scripts/setup.sh
+    - ci-scripts/test.sh --coverage --ci
+  coverage: '/TOTAL.*\s+(\d+%)/'
+  artifacts:
+    reports:
+      junit: pytest-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /python/
+      when: on_success
+    - when: never
+
+# Go tests
+test:go:
+  stage: test
+  image: golang:1.22
+  <<: *cache_config
+  needs:
+    - detect
+    - lint:go
+  script:
+    - ci-scripts/test.sh --coverage
+  coverage: '/coverage: \d+\.\d+% of statements/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /go/
+      when: on_success
+    - when: never
+
+# Rust tests
+test:rust:
+  stage: test
+  image: rust:latest
+  <<: *cache_config
+  needs:
+    - detect
+    - lint:rust
+  script:
+    - ci-scripts/test.sh
+  rules:
+    - if: $DETECTED_LANGUAGES =~ /rust/
+      when: on_success
+    - when: never
+
+# Generic test (fallback)
+test:generic:
+  stage: test
+  <<: *cache_config
+  needs:
+    - detect
+    - lint:generic
+  script:
+    - ci-scripts/setup.sh || true
+    - ci-scripts/test.sh || echo "No tests configured"
+  rules:
+    - if: $DETECTED_LANGUAGES == ""
+      when: on_success
+
+# Build job
+build:
+  stage: build
+  <<: *cache_config
+  needs:
+    - job: test:nodejs
+      optional: true
+    - job: test:python
+      optional: true
+    - job: test:go
+      optional: true
+    - job: test:rust
+      optional: true
+    - job: test:generic
+      optional: true
+  script:
+    - ci-scripts/setup.sh || true
+    - ci-scripts/build.sh --release
+  artifacts:
+    paths:
+      - dist/
+      - build/
+      - target/release/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# Docker build
+build:docker:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  needs:
+    - build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      exists:
+        - Dockerfile
+
+# Mirror sync (event-driven - triggers on push from GitHub)
+mirror:verify:
+  stage: deploy
+  script:
+    - ci-scripts/verify-mirror.sh --source origin --mirror gitlab || true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+    - when: never
+
+# Release job
+release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - build
+  script:
+    - echo "Creating release for $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: 'Release $CI_COMMIT_TAG'
+    description: 'Release created automatically from CI/CD pipeline'
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+
+# Pages deployment (documentation)
+pages:
+  stage: deploy
+  image: node:20
+  script:
+    - npm ci --prefer-offline || npm install || true
+    - npm run docs:build || mkdir -p public
+    - cp -r docs/.vitepress/dist/* public/ 2>/dev/null || cp -r docs/* public/ 2>/dev/null || echo "No docs to publish"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - docs/**/*
+      when: on_success
+    - when: never

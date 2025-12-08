@@ -1,0 +1,331 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+    inputs:
+      run_full_test:
+        description: 'Run full test suite'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  COVERAGE: true
+
+jobs:
+  # Detect project type and configuration
+  detect:
+    name: Detect Project Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      languages: ${{ steps.detect.outputs.languages }}
+      primary_language: ${{ steps.detect.outputs.primary_language }}
+      package_managers: ${{ steps.detect.outputs.package_managers }}
+      test_frameworks: ${{ steps.detect.outputs.test_frameworks }}
+      has_nodejs: ${{ steps.detect.outputs.has_nodejs }}
+      has_python: ${{ steps.detect.outputs.has_python }}
+      has_go: ${{ steps.detect.outputs.has_go }}
+      has_rust: ${{ steps.detect.outputs.has_rust }}
+      has_docker: ${{ steps.detect.outputs.has_docker }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x ci-scripts/*.sh
+
+      - name: Run detection
+        id: detect
+        run: |
+          source ci-scripts/detect.sh
+          detect_languages
+          detect_package_managers
+          detect_test_frameworks
+          detect_build_systems
+
+          echo "languages=$DETECTED_LANGUAGES" >> $GITHUB_OUTPUT
+          echo "primary_language=$PRIMARY_LANGUAGE" >> $GITHUB_OUTPUT
+          echo "package_managers=$DETECTED_PACKAGE_MANAGERS" >> $GITHUB_OUTPUT
+          echo "test_frameworks=$DETECTED_TEST_FRAMEWORKS" >> $GITHUB_OUTPUT
+
+          # Set boolean flags for conditional jobs
+          [[ "$DETECTED_LANGUAGES" == *"javascript"* || "$DETECTED_LANGUAGES" == *"typescript"* ]] && echo "has_nodejs=true" >> $GITHUB_OUTPUT || echo "has_nodejs=false" >> $GITHUB_OUTPUT
+          [[ "$DETECTED_LANGUAGES" == *"python"* ]] && echo "has_python=true" >> $GITHUB_OUTPUT || echo "has_python=false" >> $GITHUB_OUTPUT
+          [[ "$DETECTED_LANGUAGES" == *"go"* ]] && echo "has_go=true" >> $GITHUB_OUTPUT || echo "has_go=false" >> $GITHUB_OUTPUT
+          [[ "$DETECTED_LANGUAGES" == *"rust"* ]] && echo "has_rust=true" >> $GITHUB_OUTPUT || echo "has_rust=false" >> $GITHUB_OUTPUT
+          [[ -f "Dockerfile" ]] && echo "has_docker=true" >> $GITHUB_OUTPUT || echo "has_docker=false" >> $GITHUB_OUTPUT
+
+  # Lint job
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: detect
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: needs.detect.outputs.has_nodejs == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup Python
+        if: needs.detect.outputs.has_python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Setup Go
+        if: needs.detect.outputs.has_go == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Setup Rust
+        if: needs.detect.outputs.has_rust == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install dependencies
+        run: |
+          chmod +x ci-scripts/*.sh
+          ci-scripts/setup.sh
+
+      - name: Run linters
+        run: ci-scripts/lint.sh
+
+  # Test job with matrix for multiple versions
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: detect
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            node-version: '20'
+            python-version: '3.12'
+            go-version: '1.22'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: needs.detect.outputs.has_nodejs == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup Python
+        if: needs.detect.outputs.has_python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Setup Go
+        if: needs.detect.outputs.has_go == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Setup Rust
+        if: needs.detect.outputs.has_rust == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/pip
+            ~/go/pkg/mod
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json', '**/requirements*.txt', '**/go.sum', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Install dependencies
+        run: |
+          chmod +x ci-scripts/*.sh
+          ci-scripts/setup.sh
+
+      - name: Run tests
+        run: ci-scripts/test.sh --coverage --ci
+
+      - name: Upload coverage
+        if: success() && github.event_name == 'push'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Build job
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [detect, lint, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: needs.detect.outputs.has_nodejs == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup Python
+        if: needs.detect.outputs.has_python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Go
+        if: needs.detect.outputs.has_go == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Setup Rust
+        if: needs.detect.outputs.has_rust == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: |
+          chmod +x ci-scripts/*.sh
+          ci-scripts/setup.sh
+
+      - name: Build
+        run: ci-scripts/build.sh --release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+            target/release/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Mirror to GitLab (event-driven push mirroring)
+  mirror:
+    name: Mirror to GitLab
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH for GitLab
+        env:
+          GITLAB_SSH_PRIVATE_KEY: ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$GITLAB_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+
+      - name: Mirror to GitLab
+        env:
+          MIRROR_URL: ${{ secrets.GITLAB_MIRROR_URL }}
+        run: |
+          chmod +x ci-scripts/*.sh
+          ci-scripts/sync-mirror.sh --mirror-url "$MIRROR_URL" --push
+
+  # Docker build (if Dockerfile exists)
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [detect, build]
+    if: needs.detect.outputs.has_docker == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Release job (on tags)
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: dist/*
