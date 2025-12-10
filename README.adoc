@@ -1,0 +1,49 @@
+= UPM - Universal Project Manager (Archived)
+
+> "He must so to speak throw away the ladder, after he has climbed up on it."
+> — Wittgenstein, Tractatus 6.54
+
+== Status: Superseded
+
+75% complete. 58 blockers. The blockers were the message.
+
+This project has been *archived*. Its purpose has been absorbed by:
+- *Conative Gating* - Enforcement
+- *STATE.scm* - Per-project checkpoints
+- *ECOSYSTEM.scm* - Cross-project coordination
+- *policy.ncl* - Single source of truth for rules
+
+== The Lesson
+
+Complex orchestration machinery is a symptom of enforcement failure. When AI assistants actually follow policy, you don't need elaborate systems to manage the chaos they create.
+
+== What This Was
+
+A comprehensive, language-agnostic CI/CD framework that automatically detected project configurations and provided unified scripts for building, testing, and deploying across multiple platforms.
+
+*Features it had:*
+- Auto-Detection - Automatically detect languages, package managers, test frameworks
+- Multi-Language Support - JavaScript/TypeScript, Python, Ruby, Go, Rust, Java, C/C++, etc.
+- Platform Agnostic - GitHub Actions and GitLab CI
+- Mirror Sync - Event-driven repository mirroring
+- Unified Scripts - Single set of scripts across CI platforms
+
+== Useful Patterns Preserved
+
+The CI scripts (`ci-scripts/`) contain useful patterns for:
+- Project detection (`detect.sh`)
+- Multi-language setup (`setup.sh`)
+- Platform-agnostic testing (`test.sh`)
+- Repository mirroring (`sync-mirror.sh`)
+
+These patterns may be referenced by future projects but are not actively maintained.
+
+== See Also
+
+- [Conative Gating](https://github.com/hyperpolymath/conative-gating) - The enforcement mechanism
+- [elegant-STATE](https://github.com/hyperpolymath/elegant-STATE) - Simplified state management
+- [STATE.scm](./STATE.scm) - Final project state
+
+== License
+
+MIT

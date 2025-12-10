@@ -1,0 +1,36 @@
+= Universal-Project-Manager - Citation Guide
+:toc:
+
+== BibTeX
+
+[source,bibtex]
+----
+@software{universal-project-manager_2025,
+  author = {Polymath, Hyper},
+  title = {Universal-Project-Manager},
+  year = {2025},
+  url = {https://github.com/hyperpolymath/Universal-Project-Manager},
+  license = {AGPL-3.0-or-later}
+}
+----
+
+== Harvard Style
+
+Polymath, H. (2025) _Universal-Project-Manager_ [Computer software]. Available at: https://github.com/hyperpolymath/Universal-Project-Manager
+
+== OSCOLA
+
+Hyper Polymath, 'Universal-Project-Manager' (2025) <https://github.com/hyperpolymath/Universal-Project-Manager>
+
+== MLA
+
+Polymath, Hyper. "Universal-Project-Manager." 2025, github.com/hyperpolymath/Universal-Project-Manager.
+
+== APA 7
+
+Polymath, H. (2025). _Universal-Project-Manager_ [Computer software]. GitHub. https://github.com/hyperpolymath/Universal-Project-Manager
+
+== See Also
+
+* link:../CITATION.cff[CITATION.cff]
+* link:../codemeta.json[codemeta.json]
