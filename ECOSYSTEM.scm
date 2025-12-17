@@ -6,7 +6,7 @@
   (version "1.0.0")
   (name "universal-project-manager")
   (type "project")
-  (purpose "Jonathan D.A. Jewell <jonathan.jewell@gmail.com>")
+  (purpose "Language-agnostic CI/CD infrastructure and project management tooling")
 
   (position-in-ecosystem
     "Part of hyperpolymath ecosystem. Follows RSR guidelines.")
@@ -16,5 +16,5 @@
              (url "https://github.com/hyperpolymath/rhodium-standard-repositories")
              (relationship "standard")))
 
-  (what-this-is "Jonathan D.A. Jewell <jonathan.jewell@gmail.com>")
-  (what-this-is-not "- NOT exempt from RSR compliance"))
+  (what-this-is "A universal CI/CD solution providing auto-detection, platform-agnostic scripts, and repository mirroring")
+  (what-this-is-not "- NOT exempt from RSR compliance\n- NOT a replacement for platform-specific CI/CD systems"))

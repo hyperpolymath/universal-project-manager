@@ -316,8 +316,8 @@ upm init            # Initialize UPM in a project
 +
 [source,bash]
 ----
-# Update version in relevant files
-npm version patch  # or minor/major
+# Update version in relevant files (guix.scm, STATE.scm, codemeta.json, provenance.json)
+just version-bump patch  # or minor/major
 ----
 
 . **Changelog Generation**
@@ -325,7 +325,7 @@ npm version patch  # or minor/major
 [source,bash]
 ----
 # Generate changelog from commits
-npx conventional-changelog -p angular -i CHANGELOG.md -s
+just changelog
 ----
 
 . **Tag Release**
@@ -393,4 +393,4 @@ See link:CHANGELOG.md[CHANGELOG.md] for version history.
 
 == License
 
-This project is licensed under the MIT License - see link:LICENSE[LICENSE] for details.
+This project is licensed under the AGPL-3.0-or-later License - see link:LICENSE.txt[LICENSE.txt] for details.

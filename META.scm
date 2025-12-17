@@ -10,7 +10,7 @@
      (title . "RSR Compliance")
      (status . "accepted")
      (date . "2025-12-15")
-     (context . "Jonathan D.A. Jewell <jonathan.jewell@gmail.com>")
+     (context . "Need consistent standards for security, reproducibility, and maintainability across the hyperpolymath ecosystem")
      (decision . "Follow Rhodium Standard Repository guidelines")
      (consequences . ("RSR Gold target" "SHA-pinned actions" "SPDX headers" "Multi-platform CI")))))
 
