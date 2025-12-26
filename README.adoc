@@ -1,1 +1,500 @@
+= Universal Project Manager
+:toc: macro
+:toc-title: Contents
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+:experimental:
+:url-repo: https://github.com/hyperpolymath/Universal-Project-Manager
+:url-mirror: https://gitlab.com/overarch-underpin/managers/universal-project-manager
 
+image:https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml/badge.svg[CI,link=https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml]
+image:https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml/badge.svg[CodeQL,link=https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml]
+image:https://img.shields.io/badge/License-MIT-yellow.svg[License: MIT,link=https://opensource.org/licenses/MIT]
+
+[.lead]
+A comprehensive, language-agnostic CI/CD framework that automatically detects project configurations and provides unified scripts for building, testing, linting, and deploying across multiple platforms.
+
+toc::[]
+
+== What Has Been Built
+
+This repository contains a complete, working CI/CD infrastructure framework. Below is a comprehensive breakdown of all implemented components.
+
+=== Core CI Scripts
+
+Seven production-ready shell scripts comprising ~2,500+ lines of code:
+
+[cols="2,4,2",options="header"]
+|===
+|Script |Functionality |Status
+
+|`ci-scripts/detect.sh`
+|**Auto-detection engine** — Scans repositories to identify languages, package managers, test frameworks, and build systems. Outputs results as text or JSON.
+|✅ Complete
+
+|`ci-scripts/setup.sh`
+|**Dependency installer** — Installs project dependencies using the detected package manager (npm/yarn/pnpm/bun, pip/pipenv/poetry, bundler, cargo, go modules, maven/gradle, composer, dotnet).
+|✅ Complete
+
+|`ci-scripts/test.sh`
+|**Unified test runner** — Executes tests across all supported frameworks with coverage reporting. Supports `--coverage`, `--verbose`, `--ci` flags.
+|✅ Complete
+
+|`ci-scripts/lint.sh`
+|**Code quality checker** — Runs language-appropriate linters with optional auto-fix capability. Supports `--fix`, `--verbose` flags.
+|✅ Complete
+
+|`ci-scripts/build.sh`
+|**Build orchestrator** — Compiles/packages projects using detected build systems. Supports `--release`, `--debug` modes with parallel compilation.
+|✅ Complete
+
+|`ci-scripts/sync-mirror.sh`
+|**Event-driven mirror sync** — Synchronizes repositories between platforms (GitHub ↔ GitLab). Supports branch and tag propagation, dry-run mode.
+|✅ Complete
+
+|`ci-scripts/verify-mirror.sh`
+|**Sync verification** — Validates that two remotes are synchronized. Generates detailed verification reports with discrepancy detection.
+|✅ Complete
+|===
+
+=== Detection Capabilities
+
+The detection engine (`detect.sh`) recognizes:
+
+==== Languages (14+)
+
+[horizontal]
+JavaScript:: `.js`, `.mjs`, `.cjs`, `package.json`
+TypeScript:: `.ts`, `.tsx`, `tsconfig.json`
+Python:: `.py`, `setup.py`, `pyproject.toml`, `requirements.txt`
+Ruby:: `.rb`, `Gemfile`, `.gemspec`
+Go:: `.go`, `go.mod`
+Rust:: `.rs`, `Cargo.toml`
+Java:: `.java`, `pom.xml`, `build.gradle`
+Kotlin:: `.kt`, `.kts`
+C:: `.c`, `.h`
+C++:: `.cpp`, `.cc`, `.cxx`, `.hpp`
+C#:: `.cs`, `.csproj`, `.sln`
+PHP:: `.php`, `composer.json`
+Shell:: `.sh`, `.bash`
+Swift:: `.swift`, `Package.swift`
+
+==== Package Managers (15+)
+
+[cols="3*",options="header"]
+|===
+|Ecosystem |Package Managers |Detection Method
+
+|Node.js
+|npm, yarn, pnpm, bun
+|Lock files (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`)
+
+|Python
+|pip, pipenv, poetry
+|Config files (`requirements.txt`, `Pipfile`, `pyproject.toml`)
+
+|Ruby
+|Bundler
+|`Gemfile`, `Gemfile.lock`
+
+|Go
+|Go Modules
+|`go.mod`, `go.sum`
+
+|Rust
+|Cargo
+|`Cargo.toml`, `Cargo.lock`
+
+|Java/Kotlin
+|Maven, Gradle
+|`pom.xml`, `build.gradle`, `build.gradle.kts`
+
+|PHP
+|Composer
+|`composer.json`, `composer.lock`
+
+|.NET
+|NuGet/dotnet
+|`.csproj`, `.sln`, `packages.config`
+|===
+
+==== Test Frameworks (20+)
+
+[cols="2,4",options="header"]
+|===
+|Language |Frameworks Detected
+
+|JavaScript/TypeScript
+|Jest, Mocha, Vitest, AVA, npm test scripts
+
+|Python
+|pytest, unittest, tox, nose
+
+|Ruby
+|RSpec, Minitest
+
+|Go
+|go test (built-in)
+
+|Rust
+|cargo test (built-in)
+
+|Java
+|JUnit (via Maven/Gradle)
+
+|PHP
+|PHPUnit
+
+|.NET
+|xUnit, NUnit, MSTest
+
+|Shell
+|BATS (Bash Automated Testing System)
+|===
+
+==== Build Systems (15+)
+
+* *Make/CMake* — C/C++ projects
+* *npm scripts* — Node.js build commands
+* *Webpack/Vite/Rollup/esbuild* — JavaScript bundlers
+* *TypeScript compiler (tsc)* — TS compilation
+* *Python build* — Wheel generation
+* *Cargo* — Rust compilation
+* *Maven/Gradle* — Java packaging
+* *Docker/Docker Compose* — Container builds
+
+=== CI/CD Platform Integration
+
+==== GitHub Actions
+
+The `.github/workflows/ci.yml` workflow provides:
+
+* Automatic language detection on every push
+* Matrix testing across multiple OS and language versions
+* Dependency caching for faster builds
+* Code coverage reporting (Codecov integration)
+* Build artifact uploads
+* Docker image builds
+* Automatic releases on version tags
+* **Event-driven mirror sync to GitLab**
+
+==== GitLab CI
+
+The `.gitlab-ci.yml` configuration provides:
+
+* Language-specific job templates
+* Parallel test execution
+* Coverage reporting
+* Container Registry integration
+* GitLab Pages deployment
+* Release automation
+
+=== Test Suite
+
+[cols="2,4",options="header"]
+|===
+|Component |Description
+
+|`tests/test_detect.bats`
+|**17 test cases** covering language detection, package manager detection, test framework detection, build system detection, PRIMARY_LANGUAGE assignment, and JSON output generation
+
+|`tests/run_tests.sh`
+|Test orchestrator that runs BATS tests and shellcheck static analysis on all CI scripts. Auto-installs BATS if missing.
+|===
+
+=== Documentation
+
+[cols="2,4",options="header"]
+|===
+|Document |Purpose
+
+|`README.md`
+|Quick start guide with usage examples
+
+|`README.adoc`
+|This comprehensive documentation (AsciiDoc format)
+
+|`ROADMAP.adoc`
+|Development roadmap from MVP through v2.0
+
+|`SECRETS.md`
+|Configuration guide for GitHub/GitLab secrets (SSH keys, tokens)
+
+|`SECURITY.md`
+|Security policy and vulnerability reporting
+
+|`CODE_OF_CONDUCT.md`
+|Contributor Covenant Code of Conduct v2.0
+
+|`docs/CITATIONS.adoc`
+|Citation formats for academic/professional use (BibTeX, APA, MLA, etc.)
+|===
+
+== Architecture
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Universal Project Manager                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   ┌───────────────────────────────────────────────────────────┐    │
+│   │                    Detection Engine                        │    │
+│   │   detect.sh → Languages, Package Managers, Test Frameworks │    │
+│   └───────────────────────────┬───────────────────────────────┘    │
+│                               │                                     │
+│                               ▼                                     │
+│   ┌───────────────────────────────────────────────────────────┐    │
+│   │                    Setup Manager                           │    │
+│   │   setup.sh → Install dependencies using detected PM       │    │
+│   └───────────────────────────┬───────────────────────────────┘    │
+│                               │                                     │
+│         ┌─────────────────────┼─────────────────────┐              │
+│         ▼                     ▼                     ▼              │
+│   ┌───────────┐         ┌───────────┐         ┌───────────┐        │
+│   │   Test    │         │   Lint    │         │   Build   │        │
+│   │ test.sh   │         │ lint.sh   │         │ build.sh  │        │
+│   └───────────┘         └───────────┘         └───────────┘        │
+│                                                                     │
+│   ┌───────────────────────────────────────────────────────────┐    │
+│   │                    Mirror Sync                             │    │
+│   │   sync-mirror.sh ←→ verify-mirror.sh                      │    │
+│   │   GitHub ←────────────────────────────→ GitLab            │    │
+│   └───────────────────────────────────────────────────────────┘    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+----
+
+== Quick Start
+
+=== 1. Copy CI Scripts
+
+[source,bash]
+----
+cp -r ci-scripts/ /path/to/your/project/
+chmod +x /path/to/your/project/ci-scripts/*.sh
+----
+
+=== 2. Run Detection
+
+[source,bash]
+----
+./ci-scripts/detect.sh
+----
+
+.Example Output
+[source]
+----
+[INFO] Detecting project configuration in: /your/project
+[SUCCESS] Detection complete!
+
+Languages detected: javascript,typescript
+Primary language: javascript
+Package managers: npm
+Test frameworks: jest
+Build systems: npm-scripts,webpack
+----
+
+=== 3. Full Pipeline
+
+[source,bash]
+----
+./ci-scripts/setup.sh          # Install dependencies
+./ci-scripts/test.sh --coverage # Run tests with coverage
+./ci-scripts/lint.sh --fix      # Lint and auto-fix
+./ci-scripts/build.sh --release # Build for production
+----
+
+== Project Structure
+
+[source]
+----
+.
+├── ci-scripts/
+│   ├── detect.sh         # Auto-detection engine
+│   ├── setup.sh          # Dependency installer
+│   ├── test.sh           # Unified test runner
+│   ├── lint.sh           # Code quality checker
+│   ├── build.sh          # Build orchestrator
+│   ├── sync-mirror.sh    # Mirror synchronization
+│   └── verify-mirror.sh  # Sync verification
+├── tests/
+│   ├── test_detect.bats  # BATS test suite (17 tests)
+│   └── run_tests.sh      # Test orchestrator
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml        # Main CI/CD workflow
+│   │   └── codeql.yml    # Security scanning
+│   └── dependabot.yml    # Dependency updates
+├── docs/
+│   └── CITATIONS.adoc    # Citation formats
+├── .gitlab-ci.yml        # GitLab CI configuration
+├── README.adoc           # This file
+├── README.md             # Quick start guide
+├── ROADMAP.adoc          # Development roadmap
+├── SECRETS.md            # Secrets configuration
+├── SECURITY.md           # Security policy
+└── CODE_OF_CONDUCT.md    # Community guidelines
+----
+
+== Configuration
+
+=== Environment Variables
+
+[cols="2,4,2",options="header"]
+|===
+|Variable |Description |Default
+
+|`PROJECT_ROOT`
+|Project root directory
+|Script's parent directory
+
+|`CI`
+|CI environment flag
+|`false`
+
+|`COVERAGE`
+|Enable coverage reporting
+|`false`
+
+|`VERBOSE`
+|Enable verbose output
+|`false`
+
+|`FIX`
+|Auto-fix lint issues
+|`false`
+
+|`BUILD_MODE`
+|Build mode (`release`/`debug`)
+|`release`
+|===
+
+=== Planned: Configuration File
+
+Support for a `upm.yml` configuration file is planned for Phase 3:
+
+[source,yaml]
+----
+version: 1
+
+project:
+  name: my-project
+  type: nodejs  # Override auto-detection
+
+ci:
+  test:
+    coverage: true
+    parallel: true
+  lint:
+    fix: false
+
+mirror:
+  enabled: true
+  target: gitlab
+  branches:
+    - main
+    - develop
+----
+
+== Repository Mirroring
+
+UPM includes event-driven repository mirroring between GitHub and GitLab.
+
+=== Setup
+
+. Generate an SSH key:
++
+[source,bash]
+----
+ssh-keygen -t ed25519 -C "github-to-gitlab-mirror" -f gitlab_mirror_key
+----
+
+. Add the public key to GitLab as a deploy key with write access
+
+. Add secrets to GitHub:
+* `GITLAB_SSH_PRIVATE_KEY`: Contents of `gitlab_mirror_key`
+* `GITLAB_MIRROR_URL`: `git@gitlab.com:your/repo.git`
+
+. Push to main/master to trigger sync
+
+See link:SECRETS.md[SECRETS.md] for detailed instructions.
+
+== Roadmap
+
+See link:ROADMAP.adoc[ROADMAP.adoc] for the complete development roadmap.
+
+=== Current Status: Phase 1 (Foundation)
+
+[cols="1,1",options="header"]
+|===
+|Milestone |Status
+
+|Core CI scripts
+|✅ Complete
+
+|GitHub Actions workflow
+|✅ Complete
+
+|GitLab CI configuration
+|✅ Complete
+
+|Mirror sync
+|✅ Complete
+
+|Documentation
+|🔄 In Progress
+
+|Test coverage (80%+)
+|📋 Planned
+
+|Configuration file (upm.yml)
+|📋 Planned
+
+|CLI wrapper tool
+|📋 Planned
+|===
+
+=== MVP v1.0 Goals
+
+* [x] Auto-detection for 10+ languages
+* [x] GitHub Actions workflow
+* [x] GitLab CI configuration
+* [x] Mirror sync support
+* [ ] Configuration file support
+* [ ] CLI wrapper tool
+
+=== Post-MVP
+
+* **v1.1** — Bitbucket Pipelines, Azure DevOps, CircleCI, Jenkins
+* **v1.2** — Monorepo support, custom hooks, plugin system
+* **v1.3** — Enterprise features (private registries, team configs, audit logging)
+* **v2.0** — Web dashboard, analytics, AI-powered suggestions
+
+== Security
+
+* **CodeQL** — Automated security scanning
+* **Dependabot** — Automated dependency updates
+* **SAST** — Static Application Security Testing
+
+See link:SECURITY.md[SECURITY.md] for the security policy.
+
+== Contributing
+
+Contributions are welcome! Please read link:CODE_OF_CONDUCT.md[CODE_OF_CONDUCT.md] first.
+
+. Fork the repository
+. Create a feature branch
+. Make your changes
+. Run tests: `./tests/run_tests.sh`
+. Submit a pull request
+
+== Links
+
+* **GitHub (Primary)**: {url-repo}
+* **GitLab (Mirror)**: {url-mirror}
+
+== License
+
+This project is licensed under the MIT License — see link:LICENSE[LICENSE] for details.
