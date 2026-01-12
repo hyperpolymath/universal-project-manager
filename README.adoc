@@ -1,6 +1,6 @@
 = Universal Project Manager
 
-image:https://img.shields.io/badge/license-Palimpsest--MPL--1.0-purple.svg[Palimpsest-MPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"] image:https://img.shields.io/badge/philosophy-Palimpsest-purple.svg[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-licence"]
+image:[Palimpsest-MPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
 :toc: macro
 :toc-title: Contents
 :toclevels: 3
@@ -12,7 +12,6 @@ image:https://img.shields.io/badge/license-Palimpsest--MPL--1.0-purple.svg[Palim
 
 image:https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml/badge.svg[CI,link=https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml]
 image:https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml/badge.svg[CodeQL,link=https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml]
-image:https://img.shields.io/badge/License-MIT-yellow.svg[License: MIT,link=https://opensource.org/licenses/MIT]
 
 [.lead]
 A comprehensive, language-agnostic CI/CD framework that automatically detects project configurations and provides unified scripts for building, testing, linting, and deploying across multiple platforms.
