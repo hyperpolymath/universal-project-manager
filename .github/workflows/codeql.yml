@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
 # CodeQL Security Analysis
 # Scans for security vulnerabilities and coding errors
 # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning
@@ -79,7 +80,8 @@ jobs:
 
           # Build JSON matrix
           if [ ${#LANGUAGES[@]} -gt 0 ]; then
-            MATRIX=$(printf '%s\n' "${LANGUAGES[@]}" | jq -s '{include: .}')
+            MATRIX=$(printf '%s
+' "${LANGUAGES[@]}" | jq -s '{include: .}')
           else
             MATRIX='{"include": [{"language": "actions", "build-mode": "none"}]}'
           fi
