@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/hyperpolymath/Universal-Project-Manager/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
 
 A comprehensive, language-agnostic CI/CD framework that automatically detects project configurations and provides unified scripts for building, testing, and deploying across multiple platforms.
 
