@@ -244,3 +244,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 **Note**: This project is mirrored between:
 - GitHub: https://github.com/hyperpolymath/Universal-Project-Manager
 - GitLab: https://gitlab.com/overarch-underpin/managers/universal-project-manager
+
+
+## Architecture
+
+See [TOPOLOGY.md](TOPOLOGY.md) for a visual architecture map and completion dashboard.
