@@ -1,34 +1,34 @@
-= Universal-Project-Manager - Citation Guide
+= Universal Project Manager - Citation Guide
 :toc:
 
 == BibTeX
 
 [source,bibtex]
 ----
-@software{universal-project-manager_2025,
-  author = {Polymath, Hyper},
-  title = {Universal-Project-Manager},
-  year = {2025},
-  url = {https://github.com/hyperpolymath/Universal-Project-Manager},
-  license = {AGPL-3.0-or-later}
+@software{universal-project-manager_2026,
+  author = {Jewell, Jonathan D. A.},
+  title = {Universal Project Manager},
+  year = {2026},
+  url = {https://github.com/hyperpolymath/universal-project-manager},
+  license = {PMPL-1.0-or-later}
 }
 ----
 
 == Harvard Style
 
-Polymath, H. (2025) _Universal-Project-Manager_ [Computer software]. Available at: https://github.com/hyperpolymath/Universal-Project-Manager
+Jewell, J. D. A. (2026) _Universal Project Manager_ [Computer software]. Available at: https://github.com/hyperpolymath/universal-project-manager
 
 == OSCOLA
 
-Hyper Polymath, 'Universal-Project-Manager' (2025) <https://github.com/hyperpolymath/Universal-Project-Manager>
+Jonathan D. A. Jewell, 'Universal Project Manager' (2026) <https://github.com/hyperpolymath/universal-project-manager>
 
 == MLA
 
-Polymath, Hyper. "Universal-Project-Manager." 2025, github.com/hyperpolymath/Universal-Project-Manager.
+Jewell, Jonathan D. A.. "Universal Project Manager." 2026, github.com/hyperpolymath/universal-project-manager.
 
 == APA 7
 
-Polymath, H. (2025). _Universal-Project-Manager_ [Computer software]. GitHub. https://github.com/hyperpolymath/Universal-Project-Manager
+Jewell, J. D. A. (2026). _Universal Project Manager_ [Computer software]. GitHub. https://github.com/hyperpolymath/universal-project-manager
 
 == See Also
 
