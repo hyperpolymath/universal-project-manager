@@ -101,7 +101,7 @@ jobs:
 
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           components: rustfmt, clippy
 
@@ -155,7 +155,7 @@ jobs:
 
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
 
       - name: Cache dependencies
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
@@ -217,7 +217,7 @@ jobs:
 
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
 
       - name: Install dependencies
         run: |
