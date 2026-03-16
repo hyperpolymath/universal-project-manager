@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Clade declaration — part of the gv-clade-index registry
+# See: https://github.com/hyperpolymath/gv-clade-index
+
+[identity]
+uuid = "0fff48d8-92fa-5464-a5df-8e34e96ef0df"
+primary-forge = "github"
+primary-owner = "hyperpolymath"
+canonical-name = "universal-project-manager"
+prefixed-name = "dx-universal-project-manager"
+
+[clade]
+primary = "dx"
+secondary = []
+assigned = "2026-03-16"
+rationale = ""
+
+[forges]
+github = "hyperpolymath/universal-project-manager"
+gitlab = "hyperpolymath/universal-project-manager"
+bitbucket = "hyperpolymath/universal-project-manager"
+
+[lineage]
+type = "standalone"
+parent = "Universal project management tool"
+born = "2026-03-16"
