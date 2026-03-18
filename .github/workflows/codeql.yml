@@ -3,7 +3,8 @@
 # Scans for security vulnerabilities and coding errors
 # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning
 
-permissions: read-all
+permissions:
+  contents: read
 
 name: "CodeQL Security Analysis"
 
