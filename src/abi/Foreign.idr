@@ -1,5 +1,5 @@
--- SPDX-License-Identifier: PMPL-1.0-or-later
-||| Foreign Function Interface Declarations
+||| SPDX-License-Identifier: PMPL-1.0-or-later
+||| Foreign Function Interface Declarations for UNIVERSAL_PROJECT_MANAGER
 |||
 ||| This module declares all C-compatible functions that will be
 ||| implemented in the Zig FFI layer.
@@ -7,10 +7,10 @@
 ||| All functions are declared here with type signatures and safety proofs.
 ||| Implementations live in ffi/zig/
 
-module {{PROJECT}}.ABI.Foreign
+module UniversalProjectManager.ABI.Foreign
 
-import {{PROJECT}}.ABI.Types
-import {{PROJECT}}.ABI.Layout
+import UniversalProjectManager.ABI.Types
+import UniversalProjectManager.ABI.Layout
 
 %default total
 
@@ -21,7 +21,7 @@ import {{PROJECT}}.ABI.Layout
 ||| Initialize the library
 ||| Returns a handle to the library instance, or Nothing on failure
 export
-%foreign "C:{{project}}_init, lib{{project}}"
+%foreign "C:universal_project_manager_init, libuniversal_project_manager"
 prim__init : PrimIO Bits64
 
 ||| Safe wrapper for library initialization
@@ -33,7 +33,7 @@ init = do
 
 ||| Clean up library resources
 export
-%foreign "C:{{project}}_free, lib{{project}}"
+%foreign "C:universal_project_manager_free, libuniversal_project_manager"
 prim__free : Bits64 -> PrimIO ()
 
 ||| Safe wrapper for cleanup
@@ -47,7 +47,7 @@ free h = primIO (prim__free (handlePtr h))
 
 ||| Example operation: process data
 export
-%foreign "C:{{project}}_process, lib{{project}}"
+%foreign "C:universal_project_manager_process, libuniversal_project_manager"
 prim__process : Bits64 -> Bits32 -> PrimIO Bits32
 
 ||| Safe wrapper with error handling
@@ -70,12 +70,12 @@ prim__getString : Bits64 -> String
 
 ||| Free C string
 export
-%foreign "C:{{project}}_free_string, lib{{project}}"
+%foreign "C:universal_project_manager_free_string, libuniversal_project_manager"
 prim__freeString : Bits64 -> PrimIO ()
 
 ||| Get string result from library
 export
-%foreign "C:{{project}}_get_string, lib{{project}}"
+%foreign "C:universal_project_manager_get_string, libuniversal_project_manager"
 prim__getResult : Bits64 -> PrimIO Bits64
 
 ||| Safe string getter
@@ -96,7 +96,7 @@ getString h = do
 
 ||| Process array data
 export
-%foreign "C:{{project}}_process_array, lib{{project}}"
+%foreign "C:universal_project_manager_process_array, libuniversal_project_manager"
 prim__processArray : Bits64 -> Bits64 -> Bits32 -> PrimIO Bits32
 
 ||| Safe array processor
@@ -123,7 +123,7 @@ processArray h buf len = do
 
 ||| Get last error message
 export
-%foreign "C:{{project}}_last_error, lib{{project}}"
+%foreign "C:universal_project_manager_last_error, libuniversal_project_manager"
 prim__lastError : PrimIO Bits64
 
 ||| Retrieve last error as string
@@ -150,7 +150,7 @@ errorDescription NullPointer = "Null pointer"
 
 ||| Get library version
 export
-%foreign "C:{{project}}_version, lib{{project}}"
+%foreign "C:universal_project_manager_version, libuniversal_project_manager"
 prim__version : PrimIO Bits64
 
 ||| Get version as string
@@ -162,7 +162,7 @@ version = do
 
 ||| Get library build info
 export
-%foreign "C:{{project}}_build_info, lib{{project}}"
+%foreign "C:universal_project_manager_build_info, libuniversal_project_manager"
 prim__buildInfo : PrimIO Bits64
 
 ||| Get build information
@@ -183,7 +183,7 @@ Callback = Bits64 -> Bits32 -> Bits32
 
 ||| Register a callback
 export
-%foreign "C:{{project}}_register_callback, lib{{project}}"
+%foreign "C:universal_project_manager_register_callback, libuniversal_project_manager"
 prim__registerCallback : Bits64 -> AnyPtr -> PrimIO Bits32
 
 ||| Safe callback registration
@@ -206,7 +206,7 @@ registerCallback h cb = do
 
 ||| Check if library is initialized
 export
-%foreign "C:{{project}}_is_initialized, lib{{project}}"
+%foreign "C:universal_project_manager_is_initialized, libuniversal_project_manager"
 prim__isInitialized : Bits64 -> PrimIO Bits32
 
 ||| Check initialization status
