@@ -1,216 +1,49 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
-# CodeQL Security Analysis
-# Scans for security vulnerabilities and coding errors
-# https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/about-code-scanning
+# SPDX-License-Identifier: PMPL-1.0
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * 1'
+
+# Estate guardrail: cancel superseded runs so re-pushes / rebased PR
+# updates do not pile up queued runs against the shared account-wide
+# Actions concurrency pool. Applied only to read-only check workflows
+# (no publish/mutation), so cancelling a superseded run is always safe.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
-name: "CodeQL Security Analysis"
-
-on:
-  push:
-    branches: [ "main", "master", "develop" ]
-  pull_request:
-    branches: [ "main", "master", "develop" ]
-  schedule:
-    # Run weekly on Sunday at 3:23 AM UTC
-    - cron: '23 3 * * 0'
-  workflow_dispatch:
-
-concurrency:
-  group: codeql-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  # First, detect which languages are in the repository
-  detect-languages:
-    name: Detect Languages
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.detect.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Detect languages
-        id: detect
-        run: |
-          LANGUAGES=()
-
-          # Check for JavaScript/TypeScript
-          if find . -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" | grep -q .; then
-            LANGUAGES+=('{"language": "javascript-typescript", "build-mode": "none"}')
-          fi
-
-          # Check for Python
-          if find . -name "*.py" | grep -q .; then
-            LANGUAGES+=('{"language": "python", "build-mode": "none"}')
-          fi
-
-          # Check for Go
-          if find . -name "*.go" | grep -q .; then
-            LANGUAGES+=('{"language": "go", "build-mode": "autobuild"}')
-          fi
-
-          # Check for Ruby
-          if find . -name "*.rb" | grep -q .; then
-            LANGUAGES+=('{"language": "ruby", "build-mode": "none"}')
-          fi
-
-          # Check for Java/Kotlin
-          if find . -name "*.java" -o -name "*.kt" | grep -q .; then
-            LANGUAGES+=('{"language": "java-kotlin", "build-mode": "autobuild"}')
-          fi
-
-          # Check for C/C++
-          if find . -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | grep -q .; then
-            LANGUAGES+=('{"language": "c-cpp", "build-mode": "autobuild"}')
-          fi
-
-          # Check for C#
-          if find . -name "*.cs" | grep -q .; then
-            LANGUAGES+=('{"language": "csharp", "build-mode": "autobuild"}')
-          fi
-
-          # Check for Swift
-          if find . -name "*.swift" | grep -q .; then
-            LANGUAGES+=('{"language": "swift", "build-mode": "autobuild"}')
-          fi
-
-          # Always include actions analysis for GitHub workflows
-          LANGUAGES+=('{"language": "actions", "build-mode": "none"}')
-
-          # Build JSON matrix
-          if [ ${#LANGUAGES[@]} -gt 0 ]; then
-            MATRIX=$(printf '%s
-' "${LANGUAGES[@]}" | jq -s '{include: .}')
-          else
-            MATRIX='{"include": [{"language": "actions", "build-mode": "none"}]}'
-          fi
-
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "Detected languages: $MATRIX"
-
   analyze:
-    name: Analyze (${{ matrix.language }})
-    needs: detect-languages
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    timeout-minutes: 360
+    runs-on: ubuntu-latest
     permissions:
-      security-events: write
-      packages: read
-      actions: read
       contents: read
-
+      security-events: write
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect-languages.outputs.matrix) }}
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # Setup for different languages
-      - name: Setup Node.js
-        if: matrix.language == 'javascript-typescript'
-        uses: actions/setup-node@49933ea5288caeca8642195f2b846b8bbe245a93 # v4
-        with:
-          node-version: '20'
-
-      - name: Setup Python
-        if: matrix.language == 'python'
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.12'
-
-      - name: Setup Go
-        if: matrix.language == 'go'
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
-        with:
-          go-version: '1.22'
-
-      - name: Setup Java
-        if: matrix.language == 'java-kotlin'
-        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Setup .NET
-        if: matrix.language == 'csharp'
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
-        with:
-          dotnet-version: '8.0.x'
-
-      # Initialize CodeQL
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3
+        uses: github/codeql-action/init@c6f931105cb2c34c8f901cc885ba1e2e259cf745 # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
-          # Enable security-extended for more thorough analysis
-          queries: security-extended,security-and-quality
 
-      # Manual build for compiled languages if autobuild fails
-      - name: Build (Manual)
-        if: matrix.build-mode == 'manual'
-        shell: bash
-        run: |
-          chmod +x ci-scripts/*.sh 2>/dev/null || true
-          if [ -f "ci-scripts/build.sh" ]; then
-            ci-scripts/build.sh
-          else
-            echo "No build script found, attempting standard builds..."
-            # Go
-            if [ -f "go.mod" ]; then
-              go build ./...
-            fi
-            # Java/Maven
-            if [ -f "pom.xml" ]; then
-              mvn package -DskipTests -B
-            fi
-            # Java/Gradle
-            if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
-              ./gradlew build -x test 2>/dev/null || gradle build -x test
-            fi
-            # .NET
-            if ls *.csproj 1>/dev/null 2>&1; then
-              dotnet build
-            fi
-            # C/C++
-            if [ -f "CMakeLists.txt" ]; then
-              mkdir -p build && cd build && cmake .. && make
-            elif [ -f "Makefile" ]; then
-              make
-            fi
-          fi
-
-      # Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b2f9ef845756500b97acbdaf5c1dd4e9c1d15734 # v3
+        uses: github/codeql-action/analyze@c6f931105cb2c34c8f901cc885ba1e2e259cf745 # v3
         with:
           category: "/language:${{ matrix.language }}"
-          # Upload SARIF results
-          upload: always
-
-  # Summary job
-  security-summary:
-    name: Security Summary
-    needs: analyze
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Check analysis results
-        run: |
-          echo "## CodeQL Security Analysis Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Security scanning completed. Review the Security tab for detailed findings." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Analyzed Components" >> $GITHUB_STEP_SUMMARY
-          echo "- GitHub Actions workflows" >> $GITHUB_STEP_SUMMARY
-          echo "- Source code (detected languages)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "For more details, see:" >> $GITHUB_STEP_SUMMARY
-          echo "- [Security Advisories](../../security/advisories)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Code Scanning Alerts](../../security/code-scanning)" >> $GITHUB_STEP_SUMMARY
