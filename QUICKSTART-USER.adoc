@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Template: QUICKSTART-USER.adoc — 5-minute path to working software
 // Replace universal-project-manager, Universal Project Manager — See README.adoc for details., just run, Universal Project Manager started successfully. with actuals
 = universal-project-manager — Quick Start for Users
