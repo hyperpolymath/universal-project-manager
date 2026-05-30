@@ -80,7 +80,7 @@ jobs:
 
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
-        uses: actions/setup-node@49933ea5288caeca8642195f2b846b8bbe245a93 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -134,7 +134,7 @@ jobs:
 
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
-        uses: actions/setup-node@49933ea5288caeca8642195f2b846b8bbe245a93 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -198,7 +198,7 @@ jobs:
 
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
-        uses: actions/setup-node@49933ea5288caeca8642195f2b846b8bbe245a93 # v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -229,7 +229,7 @@ jobs:
         run: ci-scripts/build.sh --release
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6db9a8b71b5c2d1a090c0daf9c8bb # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-artifacts
           path: |
