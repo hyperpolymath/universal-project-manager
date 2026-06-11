@@ -7,7 +7,6 @@ stages:
   - test
   - build
   - deploy
-
 # Global settings
 default:
   image: ubuntu:22.04
@@ -15,7 +14,6 @@ default:
     - apt-get update -qq
     - apt-get install -y -qq git curl
     - chmod +x ci-scripts/*.sh
-
 # Cache configuration
 .cache_config: &cache_config
   cache:
@@ -28,7 +26,6 @@ default:
       - vendor/
       - target/
     policy: pull-push
-
 # Detect job - determines project configuration
 detect:
   stage: detect
@@ -54,12 +51,11 @@ detect:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
-
 # Node.js lint
 lint:nodejs:
   stage: lint
   image: node:20-slim
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
   script:
@@ -69,12 +65,11 @@ lint:nodejs:
     - if: $DETECTED_LANGUAGES =~ /javascript|typescript/
       when: on_success
     - when: never
-
 # Python lint
 lint:python:
   stage: lint
   image: python:3.12-slim
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
   script:
@@ -84,12 +79,11 @@ lint:python:
     - if: $DETECTED_LANGUAGES =~ /python/
       when: on_success
     - when: never
-
 # Go lint
 lint:go:
   stage: lint
   image: golang:1.22
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
   script:
@@ -99,12 +93,11 @@ lint:go:
     - if: $DETECTED_LANGUAGES =~ /go/
       when: on_success
     - when: never
-
 # Rust lint
 lint:rust:
   stage: lint
   image: rust:latest
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
   script:
@@ -114,7 +107,6 @@ lint:rust:
     - if: $DETECTED_LANGUAGES =~ /rust/
       when: on_success
     - when: never
-
 # Shell lint
 lint:shell:
   stage: lint
@@ -126,11 +118,10 @@ lint:shell:
         - ci-scripts/*.sh
       when: on_success
     - when: never
-
 # Generic lint (fallback)
 lint:generic:
   stage: lint
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
   script:
@@ -139,12 +130,11 @@ lint:generic:
   rules:
     - if: $DETECTED_LANGUAGES == ""
       when: on_success
-
 # Node.js tests
 test:nodejs:
   stage: test
   image: node:20
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
     - lint:nodejs
@@ -163,12 +153,11 @@ test:nodejs:
     - if: $DETECTED_LANGUAGES =~ /javascript|typescript/
       when: on_success
     - when: never
-
 # Python tests
 test:python:
   stage: test
   image: python:3.12
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
     - lint:python
@@ -190,12 +179,11 @@ test:python:
     - if: $DETECTED_LANGUAGES =~ /python/
       when: on_success
     - when: never
-
 # Go tests
 test:go:
   stage: test
   image: golang:1.22
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
     - lint:go
@@ -212,12 +200,11 @@ test:go:
     - if: $DETECTED_LANGUAGES =~ /go/
       when: on_success
     - when: never
-
 # Rust tests
 test:rust:
   stage: test
   image: rust:latest
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
     - lint:rust
@@ -227,11 +214,10 @@ test:rust:
     - if: $DETECTED_LANGUAGES =~ /rust/
       when: on_success
     - when: never
-
 # Generic test (fallback)
 test:generic:
   stage: test
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - detect
     - lint:generic
@@ -241,11 +227,10 @@ test:generic:
   rules:
     - if: $DETECTED_LANGUAGES == ""
       when: on_success
-
 # Build job
 build:
   stage: build
-  <<: *cache_config
+  !!merge <<: *cache_config
   needs:
     - job: test:nodejs
       optional: true
@@ -269,7 +254,6 @@ build:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
-
 # Docker build
 build:docker:
   stage: build
@@ -290,7 +274,6 @@ build:docker:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       exists:
         - Dockerfile
-
 # Mirror sync (event-driven - triggers on push from GitHub)
 mirror:verify:
   stage: deploy
@@ -300,7 +283,6 @@ mirror:verify:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: manual
     - when: never
-
 # Release job
 release:
   stage: deploy
@@ -315,7 +297,6 @@ release:
     description: 'Release created automatically from CI/CD pipeline'
   rules:
     - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
-
 # Pages deployment (documentation)
 pages:
   stage: deploy
@@ -333,3 +314,8 @@ pages:
         - docs/**/*
       when: on_success
     - when: never
+trufflehog:
+  stage: security
+  image: trufflesecurity/trufflehog:latest
+  script:
+    - trufflehog git file://. --only-verified --fail

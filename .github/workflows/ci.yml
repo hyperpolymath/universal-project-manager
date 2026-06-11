@@ -1,15 +1,13 @@
 # SPDX-License-Identifier: MPL-2.0
 permissions:
   contents: read
-
 name: CI
-
 on:
   push:
-    branches: [ main, master, develop ]
-    tags: [ 'v*' ]
+    branches: [main, master, develop]
+    tags: ['v*']
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   workflow_dispatch:
     inputs:
       run_full_test:
@@ -17,15 +15,12 @@ on:
         required: false
         default: 'false'
         type: boolean
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 env:
   CI: true
   COVERAGE: true
-
 jobs:
   # Detect project type and configuration
   detect:
@@ -45,10 +40,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Make scripts executable
         run: chmod +x ci-scripts/*.sh
-
       - name: Run detection
         id: detect
         run: |
@@ -69,7 +62,6 @@ jobs:
           [[ "$DETECTED_LANGUAGES" == *"go"* ]] && echo "has_go=true" >> $GITHUB_OUTPUT || echo "has_go=false" >> $GITHUB_OUTPUT
           [[ "$DETECTED_LANGUAGES" == *"rust"* ]] && echo "has_rust=true" >> $GITHUB_OUTPUT || echo "has_rust=false" >> $GITHUB_OUTPUT
           [[ -f "Dockerfile" ]] && echo "has_docker=true" >> $GITHUB_OUTPUT || echo "has_docker=false" >> $GITHUB_OUTPUT
-
   # Lint job
   lint:
     name: Lint
@@ -79,7 +71,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -87,35 +78,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-
       - name: Setup Python
         if: needs.detect.outputs.has_python == 'true'
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
           cache: 'pip'
-
       - name: Setup Go
         if: needs.detect.outputs.has_go == 'true'
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.22'
           cache: true
-
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           components: rustfmt, clippy
-
       - name: Install dependencies
         run: |
           chmod +x ci-scripts/*.sh
           ci-scripts/setup.sh
-
       - name: Run linters
         run: ci-scripts/lint.sh
-
   # Test job with matrix for multiple versions
   test:
     name: Test (${{ matrix.os }})
@@ -134,7 +119,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -142,25 +126,21 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-
       - name: Setup Python
         if: needs.detect.outputs.has_python == 'true'
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-
       - name: Setup Go
         if: needs.detect.outputs.has_go == 'true'
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
-
       - name: Cache dependencies
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
@@ -174,22 +154,18 @@ jobs:
           key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json', '**/requirements*.txt', '**/go.sum', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-deps-
-
       - name: Install dependencies
         run: |
           chmod +x ci-scripts/*.sh
           ci-scripts/setup.sh
-
       - name: Run tests
         run: ci-scripts/test.sh --coverage --ci
-
       - name: Upload coverage
         if: success() && github.event_name == 'push'
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
-
   # Build job
   build:
     name: Build
@@ -199,7 +175,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Setup Node.js
         if: needs.detect.outputs.has_nodejs == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -207,31 +182,25 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-
       - name: Setup Python
         if: needs.detect.outputs.has_python == 'true'
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
-
       - name: Setup Go
         if: needs.detect.outputs.has_go == 'true'
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.22'
-
       - name: Setup Rust
         if: needs.detect.outputs.has_rust == 'true'
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
-
       - name: Install dependencies
         run: |
           chmod +x ci-scripts/*.sh
           ci-scripts/setup.sh
-
       - name: Build
         run: ci-scripts/build.sh --release
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -242,7 +211,6 @@ jobs:
             target/release/
           retention-days: 7
           if-no-files-found: ignore
-
   # Mirror to GitLab (event-driven push mirroring)
   mirror:
     name: Mirror to GitLab
@@ -255,7 +223,6 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
-
       - name: Setup SSH for GitLab
         env:
           GITLAB_SSH_PRIVATE_KEY: ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
@@ -264,14 +231,12 @@ jobs:
           echo "$GITLAB_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
-
       - name: Mirror to GitLab
         env:
           MIRROR_URL: ${{ secrets.GITLAB_MIRROR_URL }}
         run: |
           chmod +x ci-scripts/*.sh
           ci-scripts/sync-mirror.sh --mirror-url "$MIRROR_URL" --push
-
   # Docker build (if Dockerfile exists)
   docker:
     name: Docker Build
@@ -282,10 +247,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-
       - name: Login to GitHub Container Registry
         if: github.event_name == 'push'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
@@ -293,7 +256,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
@@ -305,7 +267,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
-
       - name: Build and push
         uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
         with:
@@ -315,7 +276,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
   # Release job (on tags)
   release:
     name: Release
@@ -328,13 +288,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Download artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: build-artifacts
           path: dist/
-
       - name: Create Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
