@@ -161,12 +161,6 @@ jobs:
           ci-scripts/setup.sh
       - name: Run tests
         run: ci-scripts/test.sh --coverage --ci
-      - name: Upload coverage
-        if: success() && github.event_name == 'push'
-        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
   # Build job
   build:
     name: Build
