@@ -1,7 +1,1 @@
-{
-  "name": "universal-project-manager",
-  "private": true,
-  "devDependencies": {
-    "prettier": "3.10.1"
-  }
-}
+{"devDependencies":{"prettier":"3.10.1"},"name":"universal-project-manager","private":true}
